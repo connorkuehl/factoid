@@ -87,7 +87,7 @@ curl -s http://factoid.example.com/v1/facts
 Response [HTTP 200]: A JSON object whose "facts" field contains an
 array of all the facts known to the server.
 
-```
+```json
 {
   "facts": [
     {
