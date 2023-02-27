@@ -73,7 +73,7 @@ func (s *Service) FactsHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		s.RespondJSON(w, http.StatusOK, map[string]any{"fact": f})
+		s.RespondJSON(w, http.StatusCreated, map[string]any{"fact": f})
 		return
 	}
 }
