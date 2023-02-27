@@ -15,27 +15,34 @@ type metrics struct {
 }
 
 func newMetrics(reg prometheus.Registerer) *metrics {
+	namespace := "factoid"
+
 	m := &metrics{
 		reqTotal: prometheus.NewCounter(prometheus.CounterOpts{
-			Name: "http_requests_total",
-			Help: "Total number of requests received",
+			Namespace: namespace,
+			Name:      "http_requests_total",
+			Help:      "Total number of requests received",
 		}),
 		rspTotal: prometheus.NewCounterVec(prometheus.CounterOpts{
-			Name: "http_responses_total",
-			Help: "Total number of responses sent",
+			Namespace: namespace,
+			Name:      "http_responses_total",
+			Help:      "Total number of responses sent",
 		}, []string{"status"}),
 		inflight: prometheus.NewGauge(prometheus.GaugeOpts{
-			Name: "http_requests_inflight",
-			Help: "Number of requests being executed right now",
+			Namespace: namespace,
+			Name:      "http_requests_inflight",
+			Help:      "Number of requests being executed right now",
 		}),
 		totalProcessingTimeSeconds: prometheus.NewCounter(prometheus.CounterOpts{
-			Name: "http_total_request_time_seconds",
-			Help: "Time spent servicing all completed requests in seconds",
+			Namespace: namespace,
+			Name:      "http_total_request_time_seconds",
+			Help:      "Time spent servicing all completed requests in seconds",
 		}),
 		reqLatencySeconds: prometheus.NewHistogramVec(prometheus.HistogramOpts{
-			Name: "http_request_latency_seconds",
-			Help: "Request latencies by status code and method",
-		}, []string{"status", "method"}),
+			Namespace: namespace,
+			Name:      "http_request_latency_seconds",
+			Help:      "Request latencies by outcome",
+		}, []string{"status"}),
 	}
 
 	reg.MustRegister(m.reqTotal)
@@ -63,7 +70,7 @@ func (m *metrics) RequestTimeInc(inc time.Duration) {
 	m.totalProcessingTimeSeconds.Add(float64(inc.Seconds()))
 }
 
-func (m *metrics) RequestLatency(method, status string, latency time.Duration) {
-	m.reqLatencySeconds.With(prometheus.Labels{"status": status, "method": method}).
+func (m *metrics) RequestLatency(status requestStatus, latency time.Duration) {
+	m.reqLatencySeconds.With(prometheus.Labels{"status": string(status)}).
 		Observe(float64(latency.Seconds()))
 }

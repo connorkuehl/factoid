@@ -11,7 +11,7 @@ type goldenSignaller interface {
 	TotalResponsesInc(code string)
 	InflightAdd(float64)
 	RequestTimeInc(time.Duration)
-	RequestLatency(method, status string, latency time.Duration)
+	RequestLatency(status requestStatus, latency time.Duration)
 }
 
 func withMetrics(m goldenSignaller, next http.Handler) http.Handler {
@@ -26,11 +26,22 @@ func withMetrics(m goldenSignaller, next http.Handler) http.Handler {
 
 		elapsed := time.Since(start)
 
-		status := strconv.Itoa(snoop.Status())
+		statusInt := snoop.Status()
+		status := strconv.Itoa(statusInt)
+
+		var result requestStatus
+		switch {
+		case statusInt >= 500:
+			result = requestFail
+		case statusInt >= 400 && statusInt < 500:
+			result = requestReject
+		default:
+			result = requestSuccess
+		}
 
 		m.InflightAdd(-1)
 		m.TotalResponsesInc(status)
 		m.RequestTimeInc(elapsed)
-		m.RequestLatency(r.Method, status, elapsed)
+		m.RequestLatency(result, elapsed)
 	})
 }
