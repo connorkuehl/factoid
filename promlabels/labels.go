@@ -7,3 +7,9 @@ const (
 	RequestFail                  = "fail"
 	RequestReject                = "reject"
 )
+
+type Upstream string
+
+const (
+	UpstreamRepo Upstream = "repo"
+)
