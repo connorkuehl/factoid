@@ -73,6 +73,6 @@ func (m *metrics) RequestTimeInc(inc time.Duration) {
 }
 
 func (m *metrics) RequestLatency(status promlabels.RequestStatus, latency time.Duration) {
-	m.reqLatencySeconds.With(prometheus.Labels{"status": string(status)}).
+	m.reqLatencySeconds.With(prometheus.Labels{"status": status.String()}).
 		Observe(float64(latency.Seconds()))
 }
