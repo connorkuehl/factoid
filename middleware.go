@@ -4,6 +4,8 @@ import (
 	"net/http"
 	"strconv"
 	"time"
+
+	"github.com/connorkuehl/factoid/promlabels"
 )
 
 type goldenSignaller interface {
@@ -11,7 +13,7 @@ type goldenSignaller interface {
 	TotalResponsesInc(code string)
 	InflightAdd(float64)
 	RequestTimeInc(time.Duration)
-	RequestLatency(status requestStatus, latency time.Duration)
+	RequestLatency(status promlabels.RequestStatus, latency time.Duration)
 }
 
 func withMetrics(m goldenSignaller, next http.Handler) http.Handler {
@@ -29,14 +31,14 @@ func withMetrics(m goldenSignaller, next http.Handler) http.Handler {
 		statusInt := snoop.Status()
 		status := strconv.Itoa(statusInt)
 
-		var result requestStatus
+		var result promlabels.RequestStatus
 		switch {
 		case statusInt >= 500:
-			result = requestFail
+			result = promlabels.RequestFail
 		case statusInt >= 400 && statusInt < 500:
-			result = requestReject
+			result = promlabels.RequestReject
 		default:
-			result = requestSuccess
+			result = promlabels.RequestSuccess
 		}
 
 		m.InflightAdd(-1)

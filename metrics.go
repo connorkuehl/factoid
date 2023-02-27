@@ -4,6 +4,8 @@ import (
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
+
+	"github.com/connorkuehl/factoid/promlabels"
 )
 
 type metrics struct {
@@ -70,7 +72,7 @@ func (m *metrics) RequestTimeInc(inc time.Duration) {
 	m.totalProcessingTimeSeconds.Add(float64(inc.Seconds()))
 }
 
-func (m *metrics) RequestLatency(status requestStatus, latency time.Duration) {
+func (m *metrics) RequestLatency(status promlabels.RequestStatus, latency time.Duration) {
 	m.reqLatencySeconds.With(prometheus.Labels{"status": string(status)}).
 		Observe(float64(latency.Seconds()))
 }
