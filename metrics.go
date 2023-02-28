@@ -5,7 +5,7 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 
-	"github.com/connorkuehl/factoid/promlabels"
+	"github.com/connorkuehl/factoid/internal/promlabels"
 )
 
 type metrics struct {

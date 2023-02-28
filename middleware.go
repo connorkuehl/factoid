@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/connorkuehl/factoid/promlabels"
+	"github.com/connorkuehl/factoid/internal/promlabels"
 )
 
 type goldenSignaller interface {

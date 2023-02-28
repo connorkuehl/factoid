@@ -6,8 +6,8 @@ import (
 	"errors"
 	"time"
 
-	"github.com/connorkuehl/factoid/promlabels"
-	"github.com/connorkuehl/factoid/service"
+	"github.com/connorkuehl/factoid/internal/promlabels"
+	"github.com/connorkuehl/factoid/internal/service"
 )
 
 type Metrics interface {

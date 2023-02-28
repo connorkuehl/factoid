@@ -17,11 +17,11 @@ import (
 	"github.com/rs/zerolog/log"
 	_ "modernc.org/sqlite"
 
-	"github.com/connorkuehl/factoid/repo/sqlite"
-	"github.com/connorkuehl/factoid/service"
+	"github.com/connorkuehl/factoid/internal/repo/sqlite"
+	"github.com/connorkuehl/factoid/internal/service"
 )
 
-//go:embed repo/sqlite/schema.sql
+//go:embed internal/repo/sqlite/schema.sql
 var schema string
 
 func main() {
