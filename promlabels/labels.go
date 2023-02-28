@@ -8,8 +8,8 @@ func (r RequestStatus) String() string {
 
 const (
 	RequestSuccess RequestStatus = "success"
-	RequestFail                  = "fail"
-	RequestReject                = "reject"
+	RequestFail    RequestStatus = "fail"
+	RequestReject  RequestStatus = "reject"
 )
 
 type Upstream string
