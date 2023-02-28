@@ -39,6 +39,9 @@ func main() {
 	logger := log.With().Str("component", "service").Logger()
 	logger.Info().Str("db-sqlite", config.sqlitePath).Msg("properties")
 
+	reg := prometheus.NewRegistry()
+	metrics := newMetrics(reg)
+
 	db, _ := sql.Open("sqlite", config.sqlitePath)
 	defer db.Close()
 
@@ -50,11 +53,8 @@ func main() {
 
 	service := service.New(
 		logger,
-		sqlite.NewRepo(db),
+		sqlite.NewRepo(db, metrics),
 	)
-
-	reg := prometheus.NewRegistry()
-	metrics := newMetrics(reg)
 
 	public := httprouter.New()
 	public.HandlerFunc(http.MethodGet, "/v1/facts", service.FactsHandler)

@@ -4,22 +4,44 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"time"
 
+	"github.com/connorkuehl/factoid/promlabels"
 	"github.com/connorkuehl/factoid/service"
 )
 
-type Repo struct {
-	db *sql.DB
+type Metrics interface {
+	UpstreamResponsesInc(component promlabels.Upstream, status promlabels.RequestStatus)
+	UpstreamRequestsInc(component promlabels.Upstream)
+	UpstreamRequestLatency(component promlabels.Upstream, status promlabels.RequestStatus, latency time.Duration)
 }
 
-func NewRepo(db *sql.DB) *Repo {
-	return &Repo{db}
+type Repo struct {
+	db      *sql.DB
+	metrics Metrics
+}
+
+func NewRepo(db *sql.DB, metrics Metrics) *Repo {
+	return &Repo{
+		db:      db,
+		metrics: metrics,
+	}
 }
 
 func (r *Repo) Facts(ctx context.Context) ([]service.Fact, error) {
+	r.metrics.UpstreamRequestsInc(promlabels.UpstreamRepo)
+	start := time.Now()
+	status := promlabels.RequestSuccess
+
+	defer func() {
+		r.metrics.UpstreamRequestLatency(promlabels.UpstreamRepo, status, time.Since(start))
+		r.metrics.UpstreamResponsesInc(promlabels.UpstreamRepo, status)
+	}()
+
 	db := New(r.db)
 	result, err := db.GetFacts(ctx)
 	if err != nil {
+		status = promlabels.RequestFail
 		return nil, ErrToDomainErr(err)
 	}
 
@@ -32,29 +54,81 @@ func (r *Repo) Facts(ctx context.Context) ([]service.Fact, error) {
 }
 
 func (r *Repo) Fact(ctx context.Context, id int64) (service.Fact, error) {
+	r.metrics.UpstreamRequestsInc(promlabels.UpstreamRepo)
+	start := time.Now()
+	status := promlabels.RequestSuccess
+
+	defer func() {
+		r.metrics.UpstreamRequestLatency(promlabels.UpstreamRepo, status, time.Since(start))
+		r.metrics.UpstreamResponsesInc(promlabels.UpstreamRepo, status)
+	}()
+
 	db := New(r.db)
 	result, err := db.GetFact(ctx, id)
+	if err != nil {
+		status = promlabels.RequestFail
+	}
 	return ModelToDomain(result), ErrToDomainErr(err)
 }
 
 func (r *Repo) RandomFact(ctx context.Context) (service.Fact, error) {
+	r.metrics.UpstreamRequestsInc(promlabels.UpstreamRepo)
+	start := time.Now()
+	status := promlabels.RequestSuccess
+
+	defer func() {
+		r.metrics.UpstreamRequestLatency(promlabels.UpstreamRepo, status, time.Since(start))
+		r.metrics.UpstreamResponsesInc(promlabels.UpstreamRepo, status)
+	}()
+
 	db := New(r.db)
 	result, err := db.GetRandomFact(ctx)
+	if err != nil {
+		status = promlabels.RequestFail
+	}
+
 	return ModelToDomain(result), ErrToDomainErr(err)
 }
 
 func (r *Repo) CreateFact(ctx context.Context, content, source string) (service.Fact, error) {
+	r.metrics.UpstreamRequestsInc(promlabels.UpstreamRepo)
+	start := time.Now()
+	status := promlabels.RequestSuccess
+
+	defer func() {
+		r.metrics.UpstreamRequestLatency(promlabels.UpstreamRepo, status, time.Since(start))
+		r.metrics.UpstreamResponsesInc(promlabels.UpstreamRepo, status)
+	}()
+
 	db := New(r.db)
 	result, err := db.CreateFact(ctx, CreateFactParams{
 		Content: content,
 		Source:  sql.NullString{String: source, Valid: true},
 	})
+	if err != nil {
+		status = promlabels.RequestFail
+	}
+
 	return ModelToDomain(result), ErrToDomainErr(err)
 }
 
 func (r *Repo) DeleteFact(ctx context.Context, id int64) error {
+	r.metrics.UpstreamRequestsInc(promlabels.UpstreamRepo)
+	start := time.Now()
+	status := promlabels.RequestSuccess
+
+	defer func() {
+		r.metrics.UpstreamRequestLatency(promlabels.UpstreamRepo, status, time.Since(start))
+		r.metrics.UpstreamResponsesInc(promlabels.UpstreamRepo, status)
+	}()
+
 	db := New(r.db)
-	return ErrToDomainErr(db.DeleteFact(ctx, id))
+	err := db.DeleteFact(ctx, id)
+	if err != nil {
+		status = promlabels.RequestFail
+	}
+
+	return ErrToDomainErr(err)
 }
 
 func ModelToDomain(f Fact) service.Fact {
