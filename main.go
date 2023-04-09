@@ -11,7 +11,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/julienschmidt/httprouter"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rs/zerolog/log"
@@ -56,11 +55,7 @@ func main() {
 		sqlite.NewRepo(db, metrics),
 	)
 
-	mux := httprouter.New()
-	mux.HandlerFunc(http.MethodGet, "/v1/facts", service.FactsHandler)
-	mux.HandlerFunc(http.MethodGet, "/v1/fact/:id", service.FactHandler)
-	mux.HandlerFunc(http.MethodPost, "/v1/facts", service.FactsHandler)
-	mux.HandlerFunc(http.MethodDelete, "/v1/fact/:id", service.FactHandler)
+	mux := service.Routes()
 	mux.Handler(http.MethodGet, "/metrics", promhttp.HandlerFor(reg, promhttp.HandlerOpts{Registry: reg}))
 
 	server := http.Server{
