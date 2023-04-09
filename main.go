@@ -56,16 +56,16 @@ func main() {
 		sqlite.NewRepo(db, metrics),
 	)
 
-	public := httprouter.New()
-	public.HandlerFunc(http.MethodGet, "/v1/facts", service.FactsHandler)
-	public.HandlerFunc(http.MethodGet, "/v1/fact/:id", service.FactHandler)
-	public.HandlerFunc(http.MethodPost, "/v1/facts", service.FactsHandler)
-	public.HandlerFunc(http.MethodDelete, "/v1/fact/:id", service.FactHandler)
-	public.Handler(http.MethodGet, "/metrics", promhttp.HandlerFor(reg, promhttp.HandlerOpts{Registry: reg}))
+	mux := httprouter.New()
+	mux.HandlerFunc(http.MethodGet, "/v1/facts", service.FactsHandler)
+	mux.HandlerFunc(http.MethodGet, "/v1/fact/:id", service.FactHandler)
+	mux.HandlerFunc(http.MethodPost, "/v1/facts", service.FactsHandler)
+	mux.HandlerFunc(http.MethodDelete, "/v1/fact/:id", service.FactHandler)
+	mux.Handler(http.MethodGet, "/metrics", promhttp.HandlerFor(reg, promhttp.HandlerOpts{Registry: reg}))
 
-	publicServer := http.Server{
+	server := http.Server{
 		Addr:    config.readAddr,
-		Handler: withMetrics(metrics, public),
+		Handler: withMetrics(metrics, mux),
 	}
 
 	serve := func(s *http.Server, name string) {
@@ -76,7 +76,7 @@ func main() {
 		logger.Error().Err(s.ListenAndServe()).Msg("")
 	}
 
-	go serve(&publicServer, "http_public")
+	go serve(&server, "http")
 
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, os.Interrupt)
 	defer cancel()
@@ -90,7 +90,7 @@ func main() {
 	ctx, cancel = context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
 
-	publicServer.Shutdown(ctx)
+	server.Shutdown(ctx)
 
 	log.Info().Err(ctx.Err()).Msg("shut down")
 }
