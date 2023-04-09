@@ -59,20 +59,13 @@ func main() {
 	public := httprouter.New()
 	public.HandlerFunc(http.MethodGet, "/v1/facts", service.FactsHandler)
 	public.HandlerFunc(http.MethodGet, "/v1/fact/:id", service.FactHandler)
-
-	private := httprouter.New()
-	private.HandlerFunc(http.MethodPost, "/v1/facts", service.FactsHandler)
-	private.HandlerFunc(http.MethodDelete, "/v1/fact/:id", service.FactHandler)
-	private.Handler(http.MethodGet, "/metrics", promhttp.HandlerFor(reg, promhttp.HandlerOpts{Registry: reg}))
+	public.HandlerFunc(http.MethodPost, "/v1/facts", service.FactsHandler)
+	public.HandlerFunc(http.MethodDelete, "/v1/fact/:id", service.FactHandler)
+	public.Handler(http.MethodGet, "/metrics", promhttp.HandlerFor(reg, promhttp.HandlerOpts{Registry: reg}))
 
 	publicServer := http.Server{
 		Addr:    config.readAddr,
 		Handler: withMetrics(metrics, public),
-	}
-
-	privateServer := http.Server{
-		Addr:    config.writeAddr,
-		Handler: withMetrics(metrics, private),
 	}
 
 	serve := func(s *http.Server, name string) {
@@ -84,7 +77,6 @@ func main() {
 	}
 
 	go serve(&publicServer, "http_public")
-	go serve(&privateServer, "http_private")
 
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, os.Interrupt)
 	defer cancel()
@@ -98,7 +90,6 @@ func main() {
 	ctx, cancel = context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
 
-	privateServer.Shutdown(ctx)
 	publicServer.Shutdown(ctx)
 
 	log.Info().Err(ctx.Err()).Msg("shut down")

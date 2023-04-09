@@ -116,7 +116,7 @@ a JSON payload in the body of your request.
 Example:
 
 ```console
-curl -s -d '{"content": "A new fact", "source": "A README document"}' http://privileged.factoid.example.com/v1/facts
+curl -s -d '{"content": "A new fact", "source": "A README document"}' http://factoid.example.com/v1/facts
 ```
 
 Response [HTTP 201]: The newly created fact object.

@@ -17,7 +17,7 @@ func main() {
 		file string
 	)
 
-	flag.StringVar(&addr, "addr", "http://localhost:8081/v1", "REST API addr")
+	flag.StringVar(&addr, "addr", "http://localhost:8080/v1", "REST API addr")
 	flag.StringVar(&file, "csv", "", "path to CSV")
 	flag.Parse()
 
