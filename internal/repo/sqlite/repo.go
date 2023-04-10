@@ -3,12 +3,20 @@ package sqlite
 import (
 	"context"
 	"database/sql"
+	_ "embed"
 	"errors"
 	"time"
 
 	"github.com/connorkuehl/factoid/internal/promlabels"
 	"github.com/connorkuehl/factoid/internal/service"
 )
+
+//go:embed schema.sql
+var schema string
+
+func Schema() string {
+	return schema
+}
 
 type Metrics interface {
 	UpstreamResponsesInc(component promlabels.Upstream, status promlabels.RequestStatus)

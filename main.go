@@ -20,9 +20,6 @@ import (
 	"github.com/connorkuehl/factoid/internal/service"
 )
 
-//go:embed internal/repo/sqlite/schema.sql
-var schema string
-
 func main() {
 	var config struct {
 		readAddr   string
@@ -45,7 +42,7 @@ func main() {
 	defer db.Close()
 
 	if config.sqlitePath == ":memory:" {
-		if _, err := db.Exec(schema); err != nil {
+		if _, err := db.Exec(sqlite.Schema()); err != nil {
 			panic(err)
 		}
 	}
