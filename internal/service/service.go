@@ -127,7 +127,7 @@ func (s *Service) FactHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		s.RespondJSON(w, http.StatusCreated, map[string]any{"fact": f})
+		s.RespondJSON(w, http.StatusOK, map[string]any{"fact": f})
 
 	case http.MethodDelete:
 		// TODO: Implement this
