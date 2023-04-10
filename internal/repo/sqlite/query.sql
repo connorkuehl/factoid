@@ -24,5 +24,4 @@ DELETE FROM facts WHERE id = ?;
 -- name: SoftDeleteFact :exec
 UPDATE facts
 SET deleted_at = DATETIME('now')
-WHERE id = ?
-LIMIT 1;
+WHERE id = ?;

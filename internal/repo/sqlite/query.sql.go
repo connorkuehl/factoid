@@ -119,3 +119,14 @@ func (q *Queries) GetRandomFact(ctx context.Context) (Fact, error) {
 	)
 	return i, err
 }
+
+const softDeleteFact = `-- name: SoftDeleteFact :exec
+UPDATE facts
+SET deleted_at = DATETIME('now')
+WHERE id = ?
+`
+
+func (q *Queries) SoftDeleteFact(ctx context.Context, id int64) error {
+	_, err := q.db.ExecContext(ctx, softDeleteFact, id)
+	return err
+}
