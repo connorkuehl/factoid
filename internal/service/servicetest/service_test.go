@@ -338,6 +338,12 @@ func TestGetFact(t *testing.T) {
 			wantFact:    service.Fact{Content: "a fact", Source: "a source"},
 			wantStatus:  http.StatusOK,
 		},
+		{
+			name:       "rand against empty table",
+			inputID:    "rand",
+			wantStatus: http.StatusNotFound,
+			wantErr:    "not found",
+		},
 	}
 
 	for _, tt := range tests {
