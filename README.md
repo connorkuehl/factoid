@@ -13,7 +13,7 @@ To get a random fact, send a GET request to `/v1/fact/rand`.
 Example:
 
 ```console
-curl http://factoid.example.com/v1/fact/rand
+curl -s http://factoid.example.com/v1/fact/rand
 ```
 
 Response [HTTP 200]: A JSON object whose "fact" field contains a
