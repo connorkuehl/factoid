@@ -21,13 +21,11 @@ import (
 
 func main() {
 	var config struct {
-		readAddr   string
-		writeAddr  string
+		addr       string
 		sqlitePath string
 	}
 
-	flag.StringVar(&config.readAddr, "api-public", ":8080", "public API address")
-	flag.StringVar(&config.writeAddr, "api-private", ":8081", "private API address")
+	flag.StringVar(&config.addr, "addr", ":8080", "address to listen on")
 	flag.StringVar(&config.sqlitePath, "db-sqlite", ":memory:", "path to SQLite DB")
 	flag.Parse()
 
@@ -55,7 +53,7 @@ func main() {
 	mux.Handler(http.MethodGet, "/metrics", promhttp.HandlerFor(reg, promhttp.HandlerOpts{Registry: reg}))
 
 	server := http.Server{
-		Addr:    config.readAddr,
+		Addr:    config.addr,
 		Handler: withMetrics(metrics, mux),
 	}
 
