@@ -148,3 +148,6 @@ To delete a fact, send a DELETE request to `/v1/fact/:id`.
 
 Note: this is not yet implemented.
 
+## Metrics
+
+To access Prometheus metrics, send a GET request to `/metrics`.
