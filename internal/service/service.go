@@ -80,24 +80,20 @@ func (s *Service) FactsHandler(w http.ResponseWriter, r *http.Request) {
 
 func (s *Service) FactHandler(w http.ResponseWriter, r *http.Request) {
 	params := httprouter.ParamsFromContext(r.Context())
+	idParam := params.ByName("id")
 
 	logger := s.logger.With().
 		Str("request_uri", r.RequestURI).
 		Str("http_method", r.Method).
+		Str("get_fact_param_id", idParam).
 		Logger()
+
+	var id int64
+	var err error
+	id, err = strconv.ParseInt(idParam, 10, 64)
 
 	switch r.Method {
 	case http.MethodGet:
-		idParam := params.ByName("id")
-
-		logger = logger.With().
-			Str("get_fact_param_id", idParam).
-			Logger()
-
-		var id int64
-		var err error
-		id, err = strconv.ParseInt(idParam, 10, 64)
-
 		getFact := func(ctx context.Context) (Fact, error) {
 			return s.facts.Fact(ctx, id)
 		}
@@ -130,8 +126,39 @@ func (s *Service) FactHandler(w http.ResponseWriter, r *http.Request) {
 		s.RespondJSON(w, http.StatusOK, map[string]any{"fact": f})
 
 	case http.MethodDelete:
-		// TODO: Implement this
-		s.unimplemented(w, r)
+		// This belongs to the strconv.ParseInt call above the switch statement.
+		if err != nil {
+			s.RespondErrorJSON(w, http.StatusBadRequest, errors.New("id must be an integer"))
+			return
+		}
+
+		ctx := context.Background()
+
+		// Since s.facts.SoftDeleteFact doesn't return a count of
+		// rows affected.
+		_, err = s.facts.Fact(ctx, id)
+		if err != nil {
+			status := http.StatusNotFound
+			if !errors.Is(err, ErrNotFound) {
+				logger.Error().Err(err).Msg("")
+
+				status = http.StatusInternalServerError
+				err = errors.New("internal error")
+			}
+			s.RespondErrorJSON(w, status, err)
+			return
+		}
+
+		err = s.facts.DeleteFact(context.Background(), id)
+		if err != nil {
+			logger.Error().Err(err).Msg("")
+
+			err = errors.New("internal error")
+			s.RespondErrorJSON(w, http.StatusInternalServerError, err)
+			return
+		}
+
+		w.WriteHeader(http.StatusNoContent)
 	}
 }
 

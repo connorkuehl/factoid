@@ -384,9 +384,95 @@ func TestGetFact(t *testing.T) {
 }
 
 func TestDeleteFactInputValidation(t *testing.T) {
-	t.Skip("not implemented")
+	tests := []struct {
+		name       string
+		inputID    string
+		wantStatus int
+		wantError  string
+	}{
+		{
+			name:       "non-integer",
+			inputID:    "asdf",
+			wantStatus: http.StatusBadRequest,
+			wantError:  "id must be an integer",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			r, cleanup := newTestDB(t)
+			defer cleanup()
+
+			svc := service.New(log.Logger, r)
+
+			ts := httptest.NewServer(svc.Routes())
+			defer ts.Close()
+
+			req, err := http.NewRequest(http.MethodDelete, fmt.Sprintf("%s/v1/fact/%s", ts.URL, tt.inputID), strings.NewReader(""))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			rsp, err := ts.Client().Do(req)
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer rsp.Body.Close()
+
+			if tt.wantStatus != rsp.StatusCode {
+				t.Fatalf("want http %d, got http %d", tt.wantStatus, rsp.StatusCode)
+			}
+
+			var response struct {
+				Error string `json:"error"`
+			}
+
+			if err := json.NewDecoder(rsp.Body).Decode(&response); err != nil {
+				t.Fatal(err)
+			}
+
+			if tt.wantError != response.Error {
+				t.Fatalf("want error %q, got error %q", tt.wantError, response.Error)
+			}
+		})
+	}
 }
 
 func TestDeleteFact(t *testing.T) {
-	t.Skip("not implemented")
+	r, cleanup := newTestDB(t, service.Fact{Content: "To be removed", Source: "No one"})
+	defer cleanup()
+
+	svc := service.New(log.Logger, r)
+
+	ts := httptest.NewServer(svc.Routes())
+	defer ts.Close()
+
+	// The ID for that single row in the test DB above _should_ be 1.
+	req, err := http.NewRequest(http.MethodDelete, ts.URL+"/v1/fact/1", strings.NewReader(""))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	rsp, err := ts.Client().Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer rsp.Body.Close()
+
+	wantStatus := http.StatusNoContent
+	if wantStatus != rsp.StatusCode {
+		t.Fatalf("want http %d, got http %d", wantStatus, rsp.StatusCode)
+	}
+
+	// Repeat the delete request, this time it shouldn't be found.
+	rsp, err = ts.Client().Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer rsp.Body.Close()
+
+	wantStatus = http.StatusNotFound
+	if wantStatus != rsp.StatusCode {
+		t.Fatalf("want http %d, got http %d", wantStatus, rsp.StatusCode)
+	}
 }

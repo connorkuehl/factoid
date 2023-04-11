@@ -146,7 +146,31 @@ wrong with the request.
 
 To delete a fact, send a DELETE request to `/v1/fact/:id`.
 
-Note: this is not yet implemented.
+Example:
+
+```console
+curl -s -X DELETE http://factoid.example.com/v1/fact/32
+```
+
+Response [HTTP 204]: No content, but the fact has been deleted.
+
+Response [HTTP 400]: A JSON object whose error field describes what is
+wrong with the request.
+
+```json
+{
+  "error": "id must be an integer"
+}
+```
+
+Response [HTTP 404]: A JSON object whose error field indicates there is
+not a fact identified by the given ID to delete.
+
+```json
+{
+  "error": "not found"
+}
+```
 
 ## Metrics
 

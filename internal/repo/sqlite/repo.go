@@ -131,7 +131,7 @@ func (r *Repo) DeleteFact(ctx context.Context, id int64) error {
 	}()
 
 	db := New(r.db)
-	err := db.DeleteFact(ctx, id)
+	err := db.SoftDeleteFact(ctx, id)
 	if err != nil {
 		status = promlabels.RequestFail
 	}
