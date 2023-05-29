@@ -50,15 +50,15 @@ func main() {
 		Handler: mux,
 	}
 
-	serve := func(s *http.Server, name string) {
-		logger := log.With(name+"_addr", s.Addr)
+	serve := func(s *http.Server) {
+		logger := log.With("http_addr", s.Addr)
 		logger.Info("listening")
 		if err := s.ListenAndServe(); err != nil {
 			logger.Error("", "err", err)
 		}
 	}
 
-	go serve(&server, "http")
+	go serve(&server)
 
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, os.Interrupt)
 	defer cancel()
