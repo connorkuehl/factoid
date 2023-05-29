@@ -8,7 +8,7 @@ import (
 	"strconv"
 
 	"github.com/julienschmidt/httprouter"
-	"github.com/rs/zerolog"
+	log "golang.org/x/exp/slog"
 )
 
 type FactRepo interface {
@@ -20,14 +20,12 @@ type FactRepo interface {
 }
 
 type Service struct {
-	logger zerolog.Logger
-	facts  FactRepo
+	facts FactRepo
 }
 
-func New(l zerolog.Logger, f FactRepo) *Service {
+func New(f FactRepo) *Service {
 	return &Service{
-		logger: l,
-		facts:  f,
+		facts: f,
 	}
 }
 
@@ -36,7 +34,7 @@ func (s *Service) FactsHandler(w http.ResponseWriter, r *http.Request) {
 	case http.MethodGet:
 		facts, err := s.facts.Facts(context.Background())
 		if err != nil {
-			s.logger.Error().Err(err).Msg("")
+			log.Error("", "err", err)
 			s.RespondErrorJSON(w, http.StatusInternalServerError, err)
 			return
 		}
@@ -51,7 +49,7 @@ func (s *Service) FactsHandler(w http.ResponseWriter, r *http.Request) {
 
 		err := json.NewDecoder(r.Body).Decode(&body)
 		if err != nil {
-			s.logger.Error().Err(err).Msg("")
+			log.Error("", "err", err)
 			s.RespondErrorJSON(w, http.StatusBadRequest, errors.New("bad request"))
 			return
 		}
@@ -61,14 +59,13 @@ func (s *Service) FactsHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		logger := s.logger.With().
-			Str("create_fact_content", body.Content).
-			Str("create_fact_source", body.Source).
-			Logger()
-
 		f, err := s.facts.CreateFact(context.Background(), body.Content, body.Source)
 		if err != nil {
-			logger.Error().Err(err).Msg("")
+			log.With(
+				"create_fact_content", body.Content,
+				"create_fact_source", body.Source,
+				"err", err,
+			).Error("")
 			s.RespondErrorJSON(w, http.StatusInternalServerError, errors.New("internal error"))
 			return
 		}
@@ -82,11 +79,11 @@ func (s *Service) FactHandler(w http.ResponseWriter, r *http.Request) {
 	params := httprouter.ParamsFromContext(r.Context())
 	idParam := params.ByName("id")
 
-	logger := s.logger.With().
-		Str("request_uri", r.RequestURI).
-		Str("http_method", r.Method).
-		Str("get_fact_param_id", idParam).
-		Logger()
+	logger := log.With(
+		"request_uri", r.RequestURI,
+		"http_method", r.Method,
+		"get_fact_param_id", idParam,
+	)
 
 	var id int64
 	var err error
@@ -114,7 +111,7 @@ func (s *Service) FactHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			status := http.StatusNotFound
 			if !errors.Is(err, ErrNotFound) {
-				logger.Error().Err(err).Msg("")
+				logger.Error("", "err", err)
 
 				status = http.StatusInternalServerError
 				err = errors.New("internal error")
@@ -140,7 +137,7 @@ func (s *Service) FactHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			status := http.StatusNotFound
 			if !errors.Is(err, ErrNotFound) {
-				logger.Error().Err(err).Msg("")
+				logger.Error("", "err", err)
 
 				status = http.StatusInternalServerError
 				err = errors.New("internal error")
@@ -151,7 +148,7 @@ func (s *Service) FactHandler(w http.ResponseWriter, r *http.Request) {
 
 		err = s.facts.DeleteFact(context.Background(), id)
 		if err != nil {
-			logger.Error().Err(err).Msg("")
+			logger.Error("", "err", err)
 
 			err = errors.New("internal error")
 			s.RespondErrorJSON(w, http.StatusInternalServerError, err)

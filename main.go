@@ -10,7 +10,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/rs/zerolog/log"
+	log "golang.org/x/exp/slog"
 	_ "modernc.org/sqlite"
 
 	"github.com/connorkuehl/factoid/internal/repo/sqlite"
@@ -27,8 +27,8 @@ func main() {
 	flag.StringVar(&config.sqlitePath, "db-sqlite", ":memory:", "path to SQLite DB")
 	flag.Parse()
 
-	logger := log.With().Str("component", "service").Logger()
-	logger.Info().Str("db-sqlite", config.sqlitePath).Msg("properties")
+	logger := log.With("component", "service")
+	logger.Info("", "db-sqlite", config.sqlitePath)
 
 	db, _ := sql.Open("sqlite", config.sqlitePath)
 	defer db.Close()
@@ -40,7 +40,6 @@ func main() {
 	}
 
 	service := service.New(
-		logger,
 		sqlite.NewRepo(db),
 	)
 
@@ -52,11 +51,11 @@ func main() {
 	}
 
 	serve := func(s *http.Server, name string) {
-		logger := log.With().
-			Str(name+"_addr", s.Addr).
-			Logger()
-		logger.Info().Msg("listening")
-		logger.Error().Err(s.ListenAndServe()).Msg("")
+		logger := log.With(name+"_addr", s.Addr)
+		logger.Info("listening")
+		if err := s.ListenAndServe(); err != nil {
+			logger.Error("", "err", err)
+		}
 	}
 
 	go serve(&server, "http")
@@ -66,14 +65,15 @@ func main() {
 
 	<-ctx.Done()
 
-	log.Info().Msg("attempting graceful shutdown, send SIGINT again to cancel")
+	log.Info("attempting graceful shutdown, send SIGINT again to cancel")
 
 	ctx, cancel = signal.NotifyContext(context.Background(), syscall.SIGINT, os.Interrupt)
 	defer cancel()
 	ctx, cancel = context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
 
-	server.Shutdown(ctx)
-
-	log.Info().Err(ctx.Err()).Msg("shut down")
+	if err := server.Shutdown(ctx); err != nil {
+		log.Error("", "err", server.Shutdown(ctx))
+	}
+	log.Info("reached shutdown")
 }

@@ -11,7 +11,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/rs/zerolog/log"
 	_ "modernc.org/sqlite"
 
 	sqliterepo "github.com/connorkuehl/factoid/internal/repo/sqlite"
@@ -88,7 +87,7 @@ func TestGetFacts(t *testing.T) {
 			r, cleanup := newTestDB(t, tt.preexisting...)
 			defer cleanup()
 
-			svc := service.New(log.Logger, r)
+			svc := service.New(r)
 
 			ts := httptest.NewServer(svc.Routes())
 			defer ts.Close()
@@ -160,7 +159,7 @@ func TestPostFactsInputValidation(t *testing.T) {
 			r, cleanup := newTestDB(t)
 			defer cleanup()
 
-			svc := service.New(log.Logger, r)
+			svc := service.New(r)
 
 			ts := httptest.NewServer(svc.Routes())
 			defer ts.Close()
@@ -194,7 +193,7 @@ func TestPostFacts(t *testing.T) {
 	r, cleanup := newTestDB(t)
 	defer cleanup()
 
-	svc := service.New(log.Logger, r)
+	svc := service.New(r)
 
 	ts := httptest.NewServer(svc.Routes())
 	defer ts.Close()
@@ -270,7 +269,7 @@ func TestGetFactInputValidation(t *testing.T) {
 			r, cleanup := newTestDB(t)
 			defer cleanup()
 
-			svc := service.New(log.Logger, r)
+			svc := service.New(r)
 
 			ts := httptest.NewServer(svc.Routes())
 			defer ts.Close()
@@ -339,7 +338,7 @@ func TestGetFact(t *testing.T) {
 			r, cleanup := newTestDB(t, tt.preexisting...)
 			defer cleanup()
 
-			svc := service.New(log.Logger, r)
+			svc := service.New(r)
 
 			ts := httptest.NewServer(svc.Routes())
 			defer ts.Close()
@@ -397,7 +396,7 @@ func TestDeleteFactInputValidation(t *testing.T) {
 			r, cleanup := newTestDB(t)
 			defer cleanup()
 
-			svc := service.New(log.Logger, r)
+			svc := service.New(r)
 
 			ts := httptest.NewServer(svc.Routes())
 			defer ts.Close()
@@ -436,7 +435,7 @@ func TestDeleteFact(t *testing.T) {
 	r, cleanup := newTestDB(t, service.Fact{Content: "To be removed", Source: "No one"})
 	defer cleanup()
 
-	svc := service.New(log.Logger, r)
+	svc := service.New(r)
 
 	ts := httptest.NewServer(svc.Routes())
 	defer ts.Close()
