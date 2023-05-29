@@ -10,8 +10,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rs/zerolog/log"
 	_ "modernc.org/sqlite"
 
@@ -32,9 +30,6 @@ func main() {
 	logger := log.With().Str("component", "service").Logger()
 	logger.Info().Str("db-sqlite", config.sqlitePath).Msg("properties")
 
-	reg := prometheus.NewRegistry()
-	metrics := newMetrics(reg)
-
 	db, _ := sql.Open("sqlite", config.sqlitePath)
 	defer db.Close()
 
@@ -46,15 +41,14 @@ func main() {
 
 	service := service.New(
 		logger,
-		sqlite.NewRepo(db, metrics),
+		sqlite.NewRepo(db),
 	)
 
 	mux := service.Routes()
-	mux.Handler(http.MethodGet, "/metrics", promhttp.HandlerFor(reg, promhttp.HandlerOpts{Registry: reg}))
 
 	server := http.Server{
 		Addr:    config.addr,
-		Handler: withMetrics(metrics, mux),
+		Handler: mux,
 	}
 
 	serve := func(s *http.Server, name string) {

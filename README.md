@@ -171,7 +171,3 @@ not a fact identified by the given ID to delete.
   "error": "not found"
 }
 ```
-
-## Metrics
-
-To access Prometheus metrics, send a GET request to `/metrics`.

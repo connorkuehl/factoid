@@ -10,25 +10,13 @@ import (
 	"reflect"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/rs/zerolog/log"
 	_ "modernc.org/sqlite"
 
-	"github.com/connorkuehl/factoid/internal/promlabels"
 	sqliterepo "github.com/connorkuehl/factoid/internal/repo/sqlite"
 	"github.com/connorkuehl/factoid/internal/service"
 )
-
-type metricsStub struct{}
-
-func (m metricsStub) UpstreamResponsesInc(component promlabels.Upstream, status promlabels.RequestStatus) {
-}
-
-func (m metricsStub) UpstreamRequestsInc(component promlabels.Upstream) {}
-
-func (m metricsStub) UpstreamRequestLatency(component promlabels.Upstream, status promlabels.RequestStatus, latency time.Duration) {
-}
 
 func newTestDB(t *testing.T, facts ...service.Fact) (*sqliterepo.Repo, func()) {
 	db, err := sql.Open("sqlite", ":memory:")
@@ -41,7 +29,7 @@ func newTestDB(t *testing.T, facts ...service.Fact) (*sqliterepo.Repo, func()) {
 		t.Fatal(err)
 	}
 
-	repo := sqliterepo.NewRepo(db, metricsStub{})
+	repo := sqliterepo.NewRepo(db)
 
 	for _, fact := range facts {
 		_, err := repo.CreateFact(context.TODO(), fact.Content, fact.Source)
