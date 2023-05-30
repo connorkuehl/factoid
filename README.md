@@ -113,6 +113,10 @@ array of all the facts known to the server.
 To create a fact, send a POST request to `/v1/facts`. The server expects
 a JSON payload in the body of your request.
 
+Note that it's possible the service is configured to expect
+a secret in the `Authorization` header in order to process
+this request.
+
 Example:
 
 ```console
@@ -142,9 +146,22 @@ wrong with the request.
 }
 ```
 
+Response [HTTP 403]: A JSON object whose error message indicates the
+request's `Authorization` field is incorrect.
+
+```json
+{
+  "error": "forbidden"
+}
+```
+
 #### Delete a fact
 
 To delete a fact, send a DELETE request to `/v1/fact/:id`.
+
+Note that it's possible the service is configured to expect
+a secret in the `Authorization` header in order to process
+this request.
 
 Example:
 
@@ -160,6 +177,15 @@ wrong with the request.
 ```json
 {
   "error": "id must be an integer"
+}
+```
+
+Response [HTTP 403]: A JSON object whose error message indicates the
+request's `Authorization` field is incorrect.
+
+```json
+{
+  "error": "forbidden"
 }
 ```
 

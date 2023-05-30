@@ -11,6 +11,20 @@ import (
 	log "golang.org/x/exp/slog"
 )
 
+type Option interface {
+	Apply(s *Service)
+}
+
+type optionFunc func(s *Service)
+
+func (opt optionFunc) Apply(s *Service) {
+	opt(s)
+}
+
+func WithAuthorizer(auth string) optionFunc {
+	return func(s *Service) { s.auth = auth }
+}
+
 type FactRepo interface {
 	Facts(context.Context) ([]Fact, error)
 	Fact(ctx context.Context, id int64) (Fact, error)
@@ -21,12 +35,15 @@ type FactRepo interface {
 
 type Service struct {
 	facts FactRepo
+	auth  string
 }
 
-func New(f FactRepo) *Service {
-	return &Service{
-		facts: f,
+func New(f FactRepo, opts ...Option) *Service {
+	s := &Service{facts: f}
+	for _, opt := range opts {
+		opt.Apply(s)
 	}
+	return s
 }
 
 func (s *Service) FactsHandler(w http.ResponseWriter, r *http.Request) {

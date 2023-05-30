@@ -469,3 +469,65 @@ func TestDeleteFact(t *testing.T) {
 		t.Fatalf("want http %d, got http %d", wantStatus, rsp.StatusCode)
 	}
 }
+
+func TestPrivilegedRoutesRequireAuthorization(t *testing.T) {
+	type response struct {
+		Error string `json:"error"`
+	}
+
+	tests := []struct {
+		name   string
+		method string
+		uri    string
+	}{
+		{
+			name:   "delete /v1/fact/1",
+			method: http.MethodDelete,
+			uri:    "/v1/fact/1",
+		},
+		{
+			name:   "post /v1/facts",
+			method: http.MethodPost,
+			uri:    "/v1/facts",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			r, cleanup := newTestDB(t)
+			defer cleanup()
+
+			svc := service.New(r, service.WithAuthorizer("secret-token"))
+
+			ts := httptest.NewServer(svc.Routes())
+			defer ts.Close()
+
+			req, err := http.NewRequest(tt.method, ts.URL+tt.uri, strings.NewReader(""))
+			if err != nil {
+				t.Fatal(err)
+			}
+			req.Header.Set("Authorization", "not-secret-token")
+
+			rsp, err := ts.Client().Do(req)
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer rsp.Body.Close()
+
+			want := response{Error: "forbidden"}
+
+			var got response
+			if err := json.NewDecoder(rsp.Body).Decode(&got); err != nil {
+				t.Fatal(err)
+			}
+
+			if want != got {
+				t.Errorf("want %+v, got %+v", want, got)
+			}
+
+			if http.StatusForbidden != rsp.StatusCode {
+				t.Errorf("want http %d, got http %d", http.StatusForbidden, rsp.StatusCode)
+			}
+		})
+	}
+}

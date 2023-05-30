@@ -21,10 +21,12 @@ func main() {
 	var config struct {
 		addr       string
 		sqlitePath string
+		auth       string
 	}
 
 	flag.StringVar(&config.addr, "addr", ":8080", "address to listen on")
 	flag.StringVar(&config.sqlitePath, "db-sqlite", ":memory:", "path to SQLite DB")
+	flag.StringVar(&config.auth, "authorization", "", "secret for write-operations, disabled by default!")
 	flag.Parse()
 
 	logger := log.With("component", "service")
