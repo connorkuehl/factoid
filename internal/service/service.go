@@ -66,7 +66,7 @@ func (s *Service) FactsHandler(w http.ResponseWriter, r *http.Request) {
 
 		err := json.NewDecoder(r.Body).Decode(&body)
 		if err != nil {
-			log.Error("", "err", err)
+			log.With("err", err).Error("")
 			s.RespondErrorJSON(w, http.StatusBadRequest, errors.New("bad request"))
 			return
 		}
@@ -128,7 +128,7 @@ func (s *Service) FactHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			status := http.StatusNotFound
 			if !errors.Is(err, ErrNotFound) {
-				logger.Error("", "err", err)
+				logger.With("err", err).Error("")
 
 				status = http.StatusInternalServerError
 				err = errors.New("internal error")
@@ -154,7 +154,7 @@ func (s *Service) FactHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			status := http.StatusNotFound
 			if !errors.Is(err, ErrNotFound) {
-				logger.Error("", "err", err)
+				logger.With("err", err).Error("")
 
 				status = http.StatusInternalServerError
 				err = errors.New("internal error")
@@ -165,7 +165,7 @@ func (s *Service) FactHandler(w http.ResponseWriter, r *http.Request) {
 
 		err = s.facts.DeleteFact(context.Background(), id)
 		if err != nil {
-			logger.Error("", "err", err)
+			logger.With("err", err).Error("")
 
 			err = errors.New("internal error")
 			s.RespondErrorJSON(w, http.StatusInternalServerError, err)

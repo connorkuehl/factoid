@@ -30,7 +30,7 @@ func main() {
 	flag.Parse()
 
 	logger := log.With("component", "service")
-	logger.Info("", "db-sqlite", config.sqlitePath)
+	logger.With("db-sqlite", config.sqlitePath).Info("")
 
 	db, _ := sql.Open("sqlite", config.sqlitePath)
 	defer db.Close()
@@ -56,7 +56,7 @@ func main() {
 		logger := log.With("http_addr", s.Addr)
 		logger.Info("listening")
 		if err := s.ListenAndServe(); err != nil {
-			logger.Error("", "err", err)
+			logger.With("err", err).Error("")
 		}
 	}
 
@@ -75,7 +75,7 @@ func main() {
 	defer cancel()
 
 	if err := server.Shutdown(ctx); err != nil {
-		log.Error("", "err", server.Shutdown(ctx))
+		log.With("err", server.Shutdown(ctx)).Error("")
 	}
 	log.Info("reached shutdown")
 }
