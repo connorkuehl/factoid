@@ -15,10 +15,12 @@ func main() {
 	var (
 		addr string
 		file string
+		auth string
 	)
 
 	flag.StringVar(&addr, "addr", "http://localhost:8080/v1", "REST API addr")
 	flag.StringVar(&file, "csv", "", "path to CSV")
+	flag.StringVar(&auth, "auth", "", "authorization secret")
 	flag.Parse()
 
 	f, err := os.Open(file)
@@ -53,7 +55,14 @@ func main() {
 		}
 
 		url := addr + "/facts"
-		rsp, err := http.Post(url, "application/json", bytes.NewReader(blob))
+		req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(blob))
+		if err != nil {
+			log.Println("Create request failed", err)
+			continue
+		}
+
+		req.Header.Set("Authorization", auth)
+		rsp, err := http.DefaultClient.Do(req)
 		if err != nil {
 			log.Println("failed to POST", err)
 			continue
