@@ -43,6 +43,7 @@ func main() {
 
 	service := service.New(
 		sqlite.NewRepo(db),
+		service.WithAuthorizer(config.auth),
 	)
 
 	mux := service.Routes()
